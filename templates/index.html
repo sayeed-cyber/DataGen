@@ -3,346 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload PDF or any file </title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-    const BACKEND_URL = "{{ backend_url }}";
-    </script>
+    <title>Datagen - Upload</title>
     <style>
-        /* Fade-in animation for alert message */
-        @keyframes fadeIn {
-            0% {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* --- OFFLINE CSS (Works without Internet) --- */
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f3f4f6;
+            --text: #1f2937;
+            --white: #ffffff;
+            --border: #e5e7eb;
         }
 
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: var(--white);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+        }
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: #4b5563;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--primary); }
+
+        /* Main Layout */
+        .main-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            max-width: 1100px;
+            width: 100%;
+            align-items: center;
+        }
+        
+        /* Fix for Giant Image */
+        .hero-img {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            filter: drop-shadow(0 10px 8px rgba(0,0,0,0.1));
+        }
+
+        /* Upload Card */
+        .card {
+            background: var(--white);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+        }
+
+        .header-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .header-icon h2 { margin: 0; font-size: 1.5rem; color: #374151; }
+
+        /* Form Elements */
+        .drop-zone {
+            border: 2px dashed #9ca3af;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+            background: #f9fafb;
+        }
+        .drop-zone:hover {
+            border-color: var(--primary);
+            background: #eef2ff;
+        }
+        .drop-input {
+            position: absolute;
+            width: 100%; height: 100%; top: 0; left: 0;
+            opacity: 0; cursor: pointer;
+        }
+        .file-name {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #10b981;
+            min-height: 20px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn:active { transform: scale(0.98); }
+
+        .search-section {
+            margin-top: 30px;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .text-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            outline: none;
+            box-sizing: border-box; /* Fix padding issues */
+        }
+        .text-input:focus { border-color: var(--primary); ring: 2px solid var(--primary); }
+
+        /* Button Grid for Crawling */
+        .crawl-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .crawl-btn-group {
+            display: flex;
+            gap: 0;
+            flex: 1;
+        }
+        .crawl-btn-group input {
+            width: 60px;
+            padding: 10px;
+            border: 1px solid #2563eb;
+            border-right: none;
+            border-radius: 0.5rem 0 0 0.5rem;
+            outline: none;
+            text-align: center;
+        }
+        .crawl-btn-group button {
+            border-radius: 0 0.5rem 0.5rem 0;
+            flex: 1;
         }
 
         .alert-box {
-            display: flex;
-            align-items: center;
-            padding: 1em;
-            margin-top: 1em;
-            border-radius: 5px;
-            font-weight: bold;
-            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 500;
         }
+        .alert-info { background: #dbeafe; color: #1e40af; }
+        .alert-error { background: #fee2e2; color: #991b1b; }
+        .alert-warning { background: #fef3c7; color: #92400e; }
 
-        .alert-info {
-            background-color: #e7f3ff;
-            border: 1px solid #85b8ff;
-            color: #3178c6;
-        }
-
-        .alert-warning {
-            background-color: #fff4e5;
-            border: 1px solid #ffd086;
-            color: #b87018;
-        }
-
-        .alert-error {
-            background-color: #ffe5e5;
-            border: 1px solid #ff8585;
-            color: #d80027;
-        }
-
-        .alert-box svg {
-            margin-right: 0.5em;
-            width: 24px;
-            height: 24px;
+        /* Responsive */
+        @media (max-width: 768px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .hero-img { max-width: 300px; margin-bottom: 30px; }
+            .crawl-options { flex-direction: column; }
         }
     </style>
 </head>
+<body>
 
-<body class="bg-gray-100 flex flex-col min-h-screen">
-
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-md">
-        <div class="container">
-            <a class="navbar-brand text-indigo-600 font-bold" href="#">Datagen</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Contact</a>
-                    </li>
-                </ul>
-            </div>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="brand">Datagen</a>
+            <ul class="nav-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
         </div>
     </nav>
 
-    <div class="flex-grow flex items-center justify-between p-4">
-        <div class="container flex flex-row items-center justify-between max-w-6xl">
-            <div class="hidden md:block flex-grow">
-                <img src="{{ url_for('static', filename='images/pngwing.png') }}" alt="img" class="w-[500px] object-cover">
+    <div class="main-container">
+        <div class="content-grid">
+            <div>
+                <img src="{{ url_for('static', filename='images/pngwing.png') }}" alt="Art" class="hero-img">
             </div>
 
-            <div class="upload-container border border-gray-200 bg-white p-8 rounded-lg shadow-lg w-full max-w-md transition-transform duration-300 hover:shadow-2xl hover:scale-105 ml-auto">
-                <h4 class="text-3xl font-bold mb-6 text-center text-gray-700 group relative animate__animated animate__fadeInDown flex items-center justify-center space-x-2">
-                    <img src="{{ url_for('static', filename='images/plane.png') }}" alt="paper plane logo" width="28px" class="inline-block">
-                    <span class="relative z-10 text-indigo-500 neon-glow">Upload a PDF File</span>
-                    <span class="absolute inset-0 transform -translate-x-1 -translate-y-1 blur-lg opacity-80 text-indigo-400 neon-shadow"></span>
-                </h4>
+            <div class="card">
+                <div class="header-icon">
+                    <img src="{{ url_for('static', filename='images/plane.png') }}" width="30">
+                    <h2>Upload File</h2>
+                </div>
 
-                    <form id="pdfForm" method="POST" enctype="multipart/form-data" class="animate__animated animate__fadeIn">
-                        <div class="mb-4 relative group" style="height: 150px;">
-                            <input type="file" id="pdfFile" name="pdf" accept=".pdf,.docx,.txt" required
-                                class="block w-full border border-gray-300 rounded-lg p-3 mb-4 transition-all duration-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none opacity-0 absolute inset-0 z-10 cursor-pointer"
-                                onchange="displayFileName()" />
-                            <label for="pdfFile"
-                                class="flex flex-col items-center justify-center w-full h-full border border-dashed border-gray-400 rounded-lg p-3 text-center bg-white text-gray-400 group-hover:bg-indigo-50 group-focus:bg-indigo-100 transition-colors duration-200 cursor-pointer shadow-md hover:shadow-lg relative"
-                                style="padding: 20px; font-size: 14px;">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mb-2 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7m-2 0L12 3 5 7M12 12v4m-2-2h4" />
-                                </svg>
-                                <span class="font-semibold text-indigo-600">Choose PDF File</span>
-                                <span id="fileText" class="absolute bottom-3 text-gray-400 text-sm">Drag & drop .pdf file here</span>
-                            </label>
-                        </div>
-                        <button type="button" onclick="uploadPDF()"
-                            class="btn btn-primary w-full py-2 font-semibold rounded-lg text-white transition-all duration-200 transform hover:scale-105 shadow-md"
-                            style="padding: 10px; font-size: 14px; background-color: #245aba; border-color: #245aba;">
-                            please your Upload PDF
-                        </button>
-                    </form>
-                    <br>
-                    <!-- url inputs from user -->
-                    <div class="flex items-center justify-center mb-6 space-x-2">
-                        <img src="{{ url_for('static', filename='images/search.png') }}" alt="search logo" class="h-8 w-8">
-                        <h4 class="text-2xl font-bold text-center" style="color: #316fd0;">Search by URL</h4>
+                <form id="pdfForm" method="POST" enctype="multipart/form-data">
+                    <div class="drop-zone">
+                        <input type="file" id="pdfFile" name="pdf" accept=".pdf,.docx,.txt" required class="drop-input" onchange="displayFileName()">
+                        <div style="font-size: 30px; color: #9ca3af; margin-bottom: 10px;">☁️</div>
+                        <div style="color: #4b5563;">Click or Drag PDF here</div>
+                        <div id="fileText" class="file-name"></div>
                     </div>
-                
-                    <form id="urlForm" action="#" method="POST" class="animate__animated animate__fadeIn">
-                        <div class="flex items-center space-x-2">
-                          <input type="text"
-                                 class="form-control flex-grow px-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out shadow-sm text-gray-600"
-                                 placeholder="Paste the URL..." id="userInput" style="font-size: 14px; padding: 8px;" required>
-                          <button type="button" onclick="hidden_buttons()"
-                                  class="btn btn-primary text-white shadow-md w-full py-2 font-semibold rounded-lg transition-all duration-200 transform hover:scale-105"
-                                  style="width: 100px; font-size: 14px; padding: 8px; background-color: #245aba; border-color: #245aba;">
-                            Search
-                          </button>
-                        </div>
+                    <button type="button" onclick="uploadPDF()" class="btn btn-primary">Upload & Process</button>
+                </form>
+
+                <div class="search-section">
+                    <div class="header-icon" style="justify-content: flex-start; font-size: 1.1rem;">
+                        <img src="{{ url_for('static', filename='images/search.png') }}" width="20">
+                        <span>Search by URL</span>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="text" id="userInput" class="text-input" placeholder="Paste URL here (e.g. https://example.com)...">
+                    </div>
+
+                    <div class="crawl-options">
+                        <button type="button" onclick="sendMessage()" class="btn" style="background: #3b82f6; color: white; flex: 1;">
+                            Crawl This Page
+                        </button>
                         
-                        <!-- New Buttons for "Crawl Webpage" and "Crawl Website" -->
-                        <!-- Crawl Buttons Container -->
-                        <div id="crawlButtons" class="flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0 md:space-x-4 mt-4 hidden">
-                        
-                            <!-- Crawl Webpage Button -->
-                            <button type="button" onclick="sendMessage()"
-                                    class="w-full md:w-auto px-6 py-2 font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 text-white shadow-md"
-                                    style="background-color: #6ba4f7; border: 1px solid #3b82f6; font-size: 14px;">
-                            Crawl Webpage
-                            </button>
-                            
-                            <!-- Crawl Website Button with Number Input -->
-                            <div class="flex items-center border border-blue-500 rounded-lg p-1 bg-blue-100 w-full md:w-auto">
-                            <!-- Number Input Field -->
-                            <input type="number" id="numberInput" min="1" max="10"
-                                    class="flex-grow max-w-[80px] px-3 py-2 text-gray-600 bg-transparent focus:outline-none"
-                                    placeholder="Pages" style="border: none; font-size: 14px;">
-                            
-                            <!-- Crawl Website Button -->
-                            <button type="button" onclick="crawlWebsite()"
-                                    class="px-4 py-2 font-semibold uppercase text-blue-800"
-                                    style="border: none; font-size: 14px;">
+                        <div class="crawl-btn-group">
+                            <input type="number" id="numberInput" min="1" max="10" value="1" placeholder="#">
+                            <button type="button" onclick="crawlWebsite()" class="btn" style="background: #2563eb; color: white; border: 1px solid #1d4ed8;">
                                 Crawl Website
                             </button>
-                            </div>
                         </div>
+                    </div>
 
-                        <div id="result" class="mt-4 font-bold text-gray-700 animate__animated animate__fadeInUp"></div>
-                          </div>
-                      </form>
+                    <div id="result"></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <footer class="bg-white text-center py-4 border-t mt-8 text-gray-500">
-        &copy; 2025 Datagen. All Rights Reserved.
-    </footer>
-
     <script>
-        function displayFileName() {
-            const fileInput = document.getElementById('pdfFile');
-            const fileText = document.getElementById('fileText');
+        const BACKEND_URL = "{{ backend_url }}";
 
-            if (fileInput.files.length > 0) {
-                const fileName = fileInput.files[0].name;
-                fileText.textContent = fileName;
-                fileText.classList.add('text-green-500');
-            }
+        function displayFileName() {
+            const input = document.getElementById('pdfFile');
+            const display = document.getElementById('fileText');
+            if(input.files.length > 0) display.textContent = input.files[0].name;
         }
 
-        function showAlert(message, type = 'info') {
-            const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = ''; // Clear previous content
-
-            let alertClass = '';
-            let icon = '';
-
-            // Choose alert type
-            switch (type) {
-                case 'info':
-                    alertClass = 'alert-info';
-                    icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1 4h.01M12 12h.01M11 8h2m0-2a10 10 0 110 20 10 10 0 010-20z" /></svg>';
-                    break;
-                case 'warning':
-                    alertClass = 'alert-warning';
-                    icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.29 3.86L1.82 12.36c-.4.4-.4 1.04 0 1.44l8.47 8.49c.39.39 1.04.39 1.44 0l8.47-8.49c.4-.4.4-1.04 0-1.44L11.73 3.86a1.02 1.02 0 00-1.44 0zm1.71 11.65h-2v-2h2v2zm0-4h-2V7h2v4z" /></svg>';
-                    break;
-                case 'error':
-                    alertClass = 'alert-error';
-                    icon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636L5.636 18.364m12.728 0L5.636 5.636" /></svg>';
-                    break;
-            }
-
-            // Display alert
-            resultDiv.innerHTML = `<div class="alert-box ${alertClass}">${icon}<span>${message}</span></div>`;
-            resultDiv.classList.add('fade-in');
-
-            // Auto-hide alert
-            setTimeout(() => {
-                resultDiv.classList.remove('fade-in');
-                resultDiv.innerHTML = '';
-            }, 3000); // Hide after 3 seconds
+        function showAlert(msg, type) {
+            const r = document.getElementById('result');
+            r.innerHTML = `<div class="alert-box alert-${type}">${msg}</div>`;
+            setTimeout(() => r.innerHTML = '', 4000);
         }
 
         async function uploadPDF() {
-            const formData = new FormData();
-            const resultDiv = document.getElementById("result");
-            const fileInput = document.getElementById("pdfFile");
+            const file = document.getElementById('pdfFile').files[0];
+            if(!file) return showAlert('Please select a file', 'warning');
 
-            if (fileInput.files.length === 0) {
-                showAlert("Please select a file.", "warning");
-                return;
-            }
-
-            // Show loading spinner
-            resultDiv.innerHTML = '<div class="flex items-center justify-center"><img src="/static/images/loading.gif" alt="Loading..." style="height:40px;"> <span class="ml-2">Processing...</span></div>';
-
-            formData.append("file", fileInput.files[0]);  // Ensure "file" matches the expected Flask key
+            const fd = new FormData();
+            fd.append('file', file);
+            document.getElementById('result').innerHTML = 'Processing...';
 
             try {
-                const response = await fetch(BACKEND_URL + "/upload_file", {
-                    method: "POST",
-                    body: formData
-                });
-
-                const result = await response.json();
-                if (result.error) {
-                    showAlert(result.error, "error");
-                } else if (result.stage === "extracted") {
-                    // Redirect to process page as soon as extraction is done
-                    window.location.href = "/process";
-                } else {
-                    showAlert("Upload completed successfully!", "info");
-                }
-            } catch (error) {
-                document.getElementById("result").textContent = "An error occurred during upload.";
-                console.error("Upload error:", error);
-            }
+                const res = await fetch(BACKEND_URL + '/upload_file', { method: 'POST', body: fd });
+                const data = await res.json();
+                if(data.error) showAlert(data.error, 'error');
+                else if(data.stage === 'extracted') window.location.href = '/process';
+            } catch(e) { showAlert('Error uploading', 'error'); }
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
-          const navbarToggler = document.querySelector(".navbar-toggler");
-          const navbarNav = document.querySelector("#navbarNav");
-
-          navbarToggler.addEventListener("click", function() {
-            navbarNav.classList.toggle("show");
-          });
-        });
-
-        // search button javascript
-        // Function that executes when "Search" button is clicked
-        function hidden_buttons(){
-            document.getElementById("crawlButtons").classList.remove("hidden");
-        }
-
+        // Logic for "Crawl This Page"
         async function sendMessage() {
-            const userInput = document.getElementById("userInput").value;
-            const numberInput = document.getElementById("numberInput").value; // Get number input if needed
-            const resultDiv = document.getElementById("result");
-
-            if (userInput) {
-                // Show loading spinner
-                resultDiv.innerHTML = '<div class="flex items-center justify-center"><img src="/static/images/loading.gif" alt="Loading..." style="height:40px;"> <span class="ml-2">Processing...</span></div>';
-                try {
-                    const response = await fetch(BACKEND_URL + "/extract_webpage", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ url: userInput, pages: numberInput || 1 }) // Default to 1 if numberInput is empty
-                    });
-
-                    const result = await response.json();
-                    if (result.error) {
-                        resultDiv.textContent = result.error;
-                    } else if (result.stage === "extracted") {
-                        // Redirect to process page as soon as extraction is done
-                        window.location.href = "/process";
-                    } else {
-                        showAlert("Data extraction completed successfully!", "info");
-                    }
-                }
-                catch (error) {
-                    resultDiv.textContent = "An error occurred while extracting data.";
-                    console.error("Extract error:", error);
-                }
-            }
-            else{
-                showAlert("Please Enter the URL...","warning");
-            }
+            const url = document.getElementById('userInput').value;
+            if(!url) return showAlert('Enter URL', 'warning');
+            
+            document.getElementById('result').innerHTML = 'Extracting webpage...';
+            
+            try {
+                const res = await fetch(BACKEND_URL + '/extract_webpage', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url})
+                });
+                const data = await res.json();
+                if(data.stage === 'extracted') window.location.href = '/process';
+                else showAlert(data.error || 'Error', 'error');
+            } catch(e) { showAlert('Error', 'error'); }
         }
-
+        
+        // Logic for "Crawl Website"
         async function crawlWebsite() {
-            const userInput = document.getElementById("userInput").value;
-            const pages = document.getElementById("numberInput").value || 1; // Default to 1 if pages is empty
-            const resultDiv = document.getElementById("result");
+            const url = document.getElementById('userInput').value;
+            const pages = document.getElementById('numberInput').value;
+            if(!url) return showAlert('Enter URL', 'warning');
+            
+            document.getElementById('result').innerHTML = 'Crawling website...';
 
-            if (userInput) {
-                // Show loading spinner
-                resultDiv.innerHTML = '<div class="flex items-center justify-center"><img src="/static/images/loading.gif" alt="Loading..." style="height:40px;"> <span class="ml-2">Processing...</span></div>';
-                try {
-                    const response = await fetch(BACKEND_URL + "/crawl_webpage", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ url: userInput, max_pages: pages })
-                    });
-
-                    const result = await response.json();
-                    if (result.error) {
-                        resultDiv.textContent = result.error;
-                    }
-                    else {
-                        showAlert("Crawling completed successfully!", "info");
-                        // Optionally display result/model_responses here
-                        // resultDiv.textContent = JSON.stringify(result, null, 2);
-                    }
-                } catch (error) {
-                    resultDiv.textContent = "An error occurred during website crawling.";
-                    console.error("Crawl error:", error);
-                }
-            }
-            else{
-                showAlert("Please Enter the URL...","warning");
-            }
+            try {
+                const res = await fetch(BACKEND_URL + '/crawl_webpage', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: url, max_pages: pages})
+                });
+                const data = await res.json();
+                if(data.stage === 'extracted') window.location.href = '/process';
+                else showAlert(data.error || 'Error', 'error');
+            } catch(e) { showAlert('Error', 'error'); }
         }
     </script>
 </body>

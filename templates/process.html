@@ -1,350 +1,192 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Process Tracking</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datagen - Processing</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-    const BACKEND_URL = "{{ backend_url }}";
-    </script>
     <style>
+        /* --- OFFLINE CSS --- */
+        :root {
+            --primary: #4f46e5;
+            --success: #10b981;
+            --bg: #f3f4f6;
+        }
+
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); flex-shrink: 0; }
+        .nav-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-weight: 800; color: var(--primary); text-decoration: none; font-size: 1.5rem; }
+        .nav-links a { margin-left: 20px; text-decoration: none; color: #4b5563; }
+
+        /* Dashboard Layout */
+        .dashboard {
+            flex: 1;
+            display: flex;
+            gap: 20px;
             padding: 20px;
-            background: #f0f2f5;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden; /* Prevent body scroll */
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
+        /* Terminal (Left) */
+        .left-panel { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .terminal {
+            background: #111827;
+            color: #4ade80;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+            border: 1px solid #374151;
+        }
+        .terminal::-webkit-scrollbar { width: 8px; }
+        .terminal::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+
+        /* Steps (Right) */
+        .right-panel {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .step-card {
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 5px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: 0.3s;
         }
+        .step-card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #374151; }
+        .step-card p { margin: 0; font-size: 0.9rem; color: #6b7280; }
 
-        .process-container {
-            margin-top: 50px;
-            display: flex;
-            gap: 20px;
-            margin-bottom: 2rem;
+        /* Status States */
+        .step-card.active { border-left-color: var(--primary); background: #eef2ff; }
+        .step-card.active h3 { color: var(--primary); }
+        
+        .step-card.completed { border-left-color: var(--success); background: #ecfdf5; }
+        .step-card.completed h3 { color: var(--success); }
+
+        .indicator {
+            display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+            background: #d1d5db; margin-right: 10px;
         }
+        .active .indicator { background: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
+        .completed .indicator { background: var(--success); }
 
-        .left-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .right-panel {
-            flex: 1;
-        }
-
-        .terminal {
-            background: #1e1e1e;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: monospace;
-            height: 400px;
-            overflow-y: auto;
-            margin-bottom: 1rem;
-        }
-
-        .terminal::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .terminal::-webkit-scrollbar-track {
-            background: #333;
-        }
-
-        .terminal::-webkit-scrollbar-thumb {
-            background: #666;
-            border-radius: 4px;
-        }
-
-        .pipeline {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .step {
-            padding: 15px;
-            margin: 10px 0;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #ddd;
-            transition: all 0.3s ease;
-        }
-
-        .step.active {
-            background: #e3f2fd;
-            border-left-color: #2196f3;
-        }
-
-        .step.completed {
-            background: #e8f5e9;
-            border-left-color: #4caf50;
-        }
-
-        .step-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
-        }
-
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ccc;
-        }
-
-        .status-indicator.active {
-            background: #2196f3;
-            animation: pulse 1s infinite;
-        }
-
-        .status-indicator.completed {
-            background: #4caf50;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        #downloadSection {
-            display: none;
-            text-align: center;
-            margin-top: 1rem;
-        }
-
-
-        #downloadButton {
-            background: #2196f3; /* Page theme color */
-            border: none;
+        /* Download Button */
+        #downloadSection { display: none; margin-top: auto; }
+        .btn-download {
+            background: var(--success);
             color: white;
-            padding: 15px 30px;
-            font-size: 18px;
+            border: none;
+            padding: 15px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1.1rem;
             font-weight: bold;
-            border-radius: 5px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            margin: 20px auto;
-            display: inline-block;
-            animation: breathing 2s ease-in-out infinite; /* Apply breathing animation */
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+            transition: 0.2s;
+            animation: bounce 2s infinite;
+        }
+        .btn-download:hover { transform: translateY(-2px); }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
         }
 
-        #downloadButton:hover {
-            background: #00ffae;
-            transform: translateY(-2px);
+        /* Modal Overlay (Custom) */
+        .modal-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center; justify-content: center;
+            z-index: 1000;
         }
-
-        /* Breathing animation */
-        @keyframes breathing {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        .modal-box {
+            background: white; padding: 30px; border-radius: 12px;
+            width: 90%; max-width: 500px; text-align: center;
         }
-
+        .progress-bar {
+            height: 20px; background: #e5e7eb; border-radius: 10px;
+            overflow: hidden; margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%; background: var(--primary); width: 0%;
+            transition: width 0.3s;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-md">
-            <div class="container">
-                <a class="navbar-brand text-indigo-600 font-bold" href="#">Datagen</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Contact</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
 
-        <div class="process-container">
-            <div class="left-panel">
-                <div class="terminal" id="terminal"></div>
-                <!-- <div class="output-preview">
-                    <h3>Current Output Preview</h3>
-                    <div id="previewBox" class="preview-box">
-                        Preview will appear here during processing...
-                    </div>
-                </div> -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <a href="#" class="brand">Datagen</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="#">Help</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="left-panel">
+            <div class="terminal" id="terminal">
+                [System] Ready. Waiting for logs...<br>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="step-card" id="step2">
+                <h3><span class="indicator"></span>Text Extraction</h3>
+                <p>Reading file contents...</p>
+            </div>
+            <div class="step-card" id="step3">
+                <h3><span class="indicator"></span>NLP Processing</h3>
+                <p>Chunking and analysis...</p>
+            </div>
+            <div class="step-card" id="step4">
+                <h3><span class="indicator"></span>LLM Generation</h3>
+                <p>Creating QA Pairs...</p>
             </div>
 
-            <div class="right-panel">
-                <div class="pipeline">
-                    <div class="step" id="step1">
-                        <div class="step-header">
-                            <div class="status-indicator"></div>
-                            <h3>Input Processing</h3>
-                        </div>
-                        <p>Reading and validating input data</p>
-                    </div>
-                    <div class="step" id="step2">
-                        <div class="step-header">
-                            <div class="status-indicator"></div>
-                            <h3>Text Extraction</h3>
-                        </div>
-                        <p>Converting to raw text format</p>
-                    </div>
-                    <div class="step" id="step3">
-                        <div class="step-header"> 
-                            <div class="status-indicator"></div>
-                            <h3>NLP Processing</h3>
-                        </div>
-                        <p>Creating semantic text chunks</p>
-                    </div>
-                    <div class="step" id="step4">
-                        <div class="step-header">
-                            <div class="status-indicator"></div>
-                            <h3>LLM Analysis</h3>
-                        </div>
-                        <p>Sending chunks & Generating structured dataset</p>
-                    </div>
-                </div>
-
-                <div id="downloadSection">
-                    <button id="downloadButton" onclick="downloadCSV()">Download Processed Data (CSV)</button>
-                </div>
+            <div id="downloadSection">
+                <button class="btn-download" onclick="downloadCSV()">⬇ Download CSV</button>
             </div>
         </div>
     </div>
 
-    <!-- LLM Progress Modal -->
-    <div class="modal fade" id="llmProgressModal" tabindex="-1" aria-labelledby="llmProgressModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="llmProgressModalLabel">Sending Chunks to LLM</h5>
-          </div>
-          <div class="modal-body">
-            <div class="progress" style="height: 30px;">
-              <div id="llmProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; font-size: 18px;">0%</div>
+    <div class="modal-overlay" id="progressModal">
+        <div class="modal-box">
+            <h2>Generating Data...</h2>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progFill"></div>
             </div>
-            <div id="llmProgressText" class="mt-3 text-center" style="font-size: 16px;"></div>
-          </div>
+            <p id="progText">Initializing...</p>
         </div>
-      </div>
     </div>
 
     <script>
-        function downloadCSV() {
-            const terminal = document.getElementById('terminal'); // Terminal element to log status updates
-
-            // Log "Started" status for Step 5
-            const startTimestamp = new Date().toLocaleTimeString();
-            terminal.innerHTML += `[${startTimestamp}] CSV Generation - Started<br>`;
-            terminal.scrollTop = terminal.scrollHeight; // Scroll to bottom
-
-            // Get the QA pairs data from the server
-            fetch('/get_qa_pairs')
-                .then(response => response.json())
-                .then(data => {
-                    try {
-                        const qa_pairs = JSON.parse(data.qa_pairs);
-
-                        // Convert to CSV
-                        let csvContent = "Question,Answer\n"; // CSV header
-                        qa_pairs.forEach(pair => {
-                            const question = pair.question.replace(/"/g, '""');
-                            const answer = pair.answer.replace(/"/g, '""');
-                            csvContent += `"${question}","${answer}"\n`;
-                        });
-
-                        // Create and trigger download
-                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.setAttribute('href', url);
-                        link.setAttribute('download', 'qa_pairs.csv');
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-
-                        // Log "Completed" status for Step 5
-                        const endTimestamp = new Date().toLocaleTimeString();
-                        terminal.innerHTML += `[${endTimestamp}] CSV Generation - Completed<br>`;
-                        terminal.scrollTop = terminal.scrollHeight; // Scroll to bottom
-
-                        // Show the download button
-                        document.getElementById('downloadSection').style.display = 'block';
-                    } catch (error) {
-                        console.error('Error processing JSON:', error);
-
-                        // Log "Error" status for Step 5
-                        const errorTimestamp = new Date().toLocaleTimeString();
-                        terminal.innerHTML += `[${errorTimestamp}] Step 5 (CSV Generation) - Error: ${error.message}<br>`;
-                        terminal.scrollTop = terminal.scrollHeight; // Scroll to bottom
-
-                        alert('Error creating CSV file. Please try again.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching QA pairs:', error);
-
-                    // Log "Error" status for Step 5
-                    const errorTimestamp = new Date().toLocaleTimeString();
-                    terminal.innerHTML += `[${errorTimestamp}] Step 5 (CSV Generation) - Error: ${error.message}<br>`;
-                    terminal.scrollTop = terminal.scrollHeight; // Scroll to bottom
-
-                    alert('Error downloading data. Please try again.');
-                });
-        }
-
-    
-        // Function to update the visual status of each step
-        function updateStep(stepNumber, status) {
-            const step = document.getElementById(`step${stepNumber}`);
-            const indicator = step.querySelector('.status-indicator');
-    
-            if (status === 'active') {
-                step.classList.add('active');
-                step.classList.remove('completed');
-                indicator.classList.add('active');
-                indicator.classList.remove('completed');
-            } else if (status === 'completed') {
-                step.classList.remove('active');
-                step.classList.add('completed');
-                indicator.classList.remove('active');
-                indicator.classList.add('completed');
-    
-                // Show the download button if step 5 is completed
-                if (stepNumber === 4) {
-                    document.getElementById('downloadSection').style.display = 'block';
-                }
-            }
-        }
-    
         // Log fetching function
         function fetchProcessLogs() {
             $.ajax({
@@ -353,157 +195,81 @@
                 success: function(response) {
                     const terminal = document.getElementById('terminal');
                     response.forEach(entry => {
-                        const timestamp = new Date().toLocaleTimeString();
-                        terminal.innerHTML += `[${timestamp}] ${entry.function} - ${entry.status}<br>`;
-    
-                        // Display each crawled link on a new line if they are present in the log entry
+                        const time = new Date().toLocaleTimeString();
+                        let color = entry.status.includes('Error') ? '#ef4444' : '#4ade80';
+                        
+                        terminal.innerHTML += `<div style="margin-bottom:4px;">
+                            <span style="color:#6b7280">[${time}]</span> 
+                            <span style="color:#e5e7eb">${entry.function}</span>: 
+                            <span style="color:${color}">${entry.status}</span>
+                        </div>`;
+
                         if (entry.data && entry.data.crawled_links) {
-                            terminal.innerHTML += `[${timestamp}] Crawled Links:<br>`;
                             entry.data.crawled_links.forEach(link => {
-                                terminal.innerHTML += `&nbsp;&nbsp;• ${link}<br>`;
+                                terminal.innerHTML += `<div style="padding-left:20px; color:#9ca3af;">• ${link}</div>`;
                             });
                         }
                     });
-                    terminal.scrollTop = terminal.scrollHeight; // Scroll to bottom
-    
-                    // Update pipeline steps based on process logs
-                    updatePipelineSteps(response);
-                },
-                error: function() {
-                    console.error('Failed to fetch process logs');
+                    terminal.scrollTop = terminal.scrollHeight;
+                    updateSteps(response);
                 }
             });
         }
-    
-        // Function to handle the mapping of logs to steps and updating their status
-        function updatePipelineSteps(logs) {
-            // Map each function to its corresponding step number
-            const stepsMapping = {
-                "extract_text_from_pdf": 2,
-                "extract_text_from_docx": 2,
-                "extract_text_from_txt": 2,
-                "extract_data_from_webpage": 2,
-                "crawl_website": 2,
-                "NLP_processing": 3,
-                "sending_chunk_to_LLM": 4
-                // Step 5 (CSV generation) is handled directly in the browser
+
+        function updateSteps(logs) {
+            const map = {
+                "extract_text_from_pdf": "step2",
+                "extract_text_from_docx": "step2",
+                "extract_text_from_txt": "step2",
+                "extract_data_from_webpage": "step2",
+                "crawl_website": "step2",
+                "NLP_processing": "step3",
+                "sending_chunk_to_LLM": "step4"
             };
-    
-            // Reset all steps before updating
-            for (let i = 1; i <= 4; i++) {
-                updateStep(i, ""); // Reset each step's state
-            }
-    
-            // Update steps based on the current logs
+
             logs.forEach(entry => {
-                const stepNumber = stepsMapping[entry.function];
-                if (stepNumber) {
-                    if (entry.status === "Started") {
-                        updateStep(stepNumber, "active");
-                    } else if (entry.status.includes("Completed") || entry.status.includes("Error")) {
-                        updateStep(stepNumber, "completed");
+                const id = map[entry.function];
+                if(id) {
+                    const el = document.getElementById(id);
+                    if(entry.status === 'Started') {
+                        el.classList.add('active');
+                        el.classList.remove('completed');
+                    } else if(entry.status.includes('Completed')) {
+                        el.classList.remove('active');
+                        el.classList.add('completed');
+                        if(id === 'step4') document.getElementById('downloadSection').style.display = 'block';
                     }
                 }
             });
         }
-    
-        let llmProgressInterval = null;
 
-        function showLLMProgressModal() {
-            const modal = new bootstrap.Modal(document.getElementById('llmProgressModal'), {backdrop: 'static', keyboard: false});
-            modal.show();
-        }
+        function pollProgress() {
+            $.get('/get_llm_progress', function(p) {
+                const modal = document.getElementById('progressModal');
+                const fill = document.getElementById('progFill');
+                const text = document.getElementById('progText');
 
-        function hideLLMProgressModal() {
-            const modalEl = document.getElementById('llmProgressModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-            // Remove any leftover Bootstrap modal backdrop and modal-open class
-            setTimeout(function() {
-                $(".modal-backdrop").remove();
-                $("body").removeClass("modal-open");
-                $("body").css("padding-right", "");
-            }, 500); // Wait for modal to finish hiding
-        }
-
-        function pollLLMProgress() {
-            $.get('/get_llm_progress', function(progress) {
-                if (progress.total > 0 && progress.status === 'running') {
-                    showLLMProgressModal();
-                    const percent = Math.round((progress.current / progress.total) * 100);
-                    $("#llmProgressBar").css('width', percent + '%').text(percent + '%');
-                    $("#llmProgressText").text(`Chunk ${progress.current} of ${progress.total}`);
-                } else if (progress.status === 'done' || progress.status === 'error') {
-                    $("#llmProgressBar").css('width', '100%').text('100%');
-                    $("#llmProgressText").text(progress.status === 'done' ? 'All chunks sent!' : 'Error during LLM processing.');
-                    setTimeout(hideLLMProgressModal, 1200);
-                    clearInterval(llmProgressInterval);
-                } else {
-                    // Hide if not running
-                    hideLLMProgressModal();
+                if(p.status === 'running' && p.total > 0) {
+                    modal.style.display = 'flex';
+                    const pct = Math.round((p.current / p.total) * 100);
+                    fill.style.width = pct + '%';
+                    text.innerText = `Chunk ${p.current} / ${p.total}`;
+                } else if (p.status === 'done') {
+                    fill.style.width = '100%';
+                    text.innerText = 'Completed!';
+                    setTimeout(() => { modal.style.display = 'none'; }, 1000);
                 }
             });
+        }
+
+        function downloadCSV() {
+            window.location.href = '/download_csv';
         }
 
         $(document).ready(function() {
-            updateStep(1, "completed");
-            fetchProcessLogs(); // Initial fetch on page load
-            // Only continue polling if not stuck at text extraction
-            let extractionCompleted = false;
-            setInterval(function() {
-                fetchProcessLogs();
-                // Check if we are stuck at text extraction only
-                const terminal = document.getElementById('terminal');
-                if (terminal.innerText.match(/text_extraction - Completed/)) {
-                    extractionCompleted = true;
-                }
-                // If only text extraction is completed and nothing else for 10 seconds, show a message
-                if (extractionCompleted && !terminal.innerText.match(/NLP_processing|sending_chunk_to_LLM/)) {
-                    if (!document.getElementById('stuckMsg')) {
-                        const msg = document.createElement('div');
-                        msg.id = 'stuckMsg';
-                        msg.style.color = 'red';
-                        msg.style.marginTop = '10px';
-                        msg.innerText = 'Processing is stuck at text extraction. Please check your backend logs or try again.';
-                        terminal.parentNode.appendChild(msg);
-                    }
-                } else {
-                    const stuckMsg = document.getElementById('stuckMsg');
-                    if (stuckMsg) stuckMsg.remove();
-                }
-            }, 1000); // Auto-refresh every second
-
-            llmProgressInterval = setInterval(pollLLMProgress, 1000);
-
-            // Navigation and process abort logic
-            let processActive = true;
-            function abortProcessAndGoHome() {
-                if (!processActive) {
-                    window.location.href = '/';
-                    return;
-                }
-                if (confirm('Progress will be lost. Are you sure you want to leave this page?')) {
-                    // Notify backend to abort process
-                    fetch('/abort_process', {method: 'POST'})
-                        .then(() => {
-                            processActive = false;
-                            window.location.href = '/';
-                        });
-                }
-            }
-            // Warn if user tries to close or reload the page
-            window.addEventListener('beforeunload', function (e) {
-                if (processActive) {
-                    e.preventDefault();
-                    e.returnValue = 'Progress will be lost. Are you sure you want to leave?';
-                }
-            });
-            // Add Home navigation event
-            $(".navbar-brand, .nav-link:contains('Home')").on('click', function(e) {
-                e.preventDefault();
-                abortProcessAndGoHome();
-            });
+            setInterval(fetchProcessLogs, 1000);
+            setInterval(pollProgress, 1000);
         });
-    </script>    
+    </script>
 </body>
 </html>
